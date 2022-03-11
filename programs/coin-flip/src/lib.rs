@@ -15,6 +15,8 @@ pub mod coin_flip {
 
         coin_flip.players = [ctx.accounts.player_one.key(), player_two];
         coin_flip.player_one_seed = 124;
+        coin_flip.bump = *ctx.bumps.get("coin_flip").unwrap();
+
         Ok(())
     }
 
@@ -36,8 +38,14 @@ pub mod coin_flip {
 }
 
 #[derive(Accounts)]
+#[instruction(player_two: Pubkey)]
 pub struct Setup<'info> {
-    #[account(init, payer = player_one, space = CoinFlip::LEN)]
+    #[account(
+        init, 
+        payer = player_one, 
+        space = CoinFlip::LEN,
+        seeds = [b"coin-flip", player_one.key().as_ref(), player_two.as_ref()], bump
+    )]
     pub coin_flip: Account<'info, CoinFlip>,
     #[account(mut)]
     pub player_one: Signer<'info>,
@@ -56,7 +64,8 @@ pub struct Play<'info> {
 pub struct CoinFlip {
     players: [Pubkey; 2], 
     player_one_seed: i64,
-    state: CoinFlipState, 
+    state: CoinFlipState,
+    bump: u8
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
@@ -79,7 +88,7 @@ pub enum Side {
 
 
 impl CoinFlip {
-    const LEN: usize = 64 + 8 + 33 + 8;
+    const LEN: usize = 64 + 8 + 33 + 8 + 8;
 
     fn flip_side(&self, flip_number: i64) -> Side {
         if flip_number == 0 {

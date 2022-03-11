@@ -4,6 +4,11 @@ import { CoinFlip } from "../target/types/coin_flip";
 const { SystemProgram, LAMPORTS_PER_SOL } = anchor.web3;
 
 import * as assert from "assert";
+const program = anchor.workspace.CoinFlip;
+
+function programForUser(user) {
+  return new anchor.Program(program.idl, program.programId, user.provider);
+}
 
 async function play(program, coinFlip, player) {
   const playerChoice = 1;
@@ -23,35 +28,53 @@ async function play(program, coinFlip, player) {
 describe("coin-flip", () => {
   const provider = anchor.Provider.local("http://127.0.0.1:8899");
   anchor.setProvider(provider);
-  const program = anchor.workspace.CoinFlip;
 
   it("setups the game", async () => {
-    const coinFlipKeypair = anchor.web3.Keypair.generate();
     const playerOne = program.provider.wallet;
     const playerTwo = anchor.web3.Keypair.generate();
-    await program.rpc.setup(playerTwo.publicKey, {
+    const playerOneProgram = programForUser(playerOne);
+
+    const [coinFlipPDA, _] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("coin-flip"),
+        playerOne.publicKey.toBuffer(),
+        playerTwo.publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    await playerOneProgram.rpc.setup(playerTwo.publicKey, {
       accounts: {
-        coinFlip: coinFlipKeypair.publicKey,
+        coinFlip: coinFlipPDA,
         playerOne: playerOne.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
-      signers: [coinFlipKeypair],
     });
   });
 
   it("plays the game", async () => {
-    const coinFlipKeypair = anchor.web3.Keypair.generate();
     const playerOne = program.provider.wallet;
     const playerTwo = anchor.web3.Keypair.generate();
-    await program.rpc.setup(playerTwo.publicKey, {
+    const playerOneProgram = programForUser(playerOne);
+    const playerTwoProgram = programForUser(playerTwo);
+
+    const [coinFlipPDA, _] = await anchor.web3.PublicKey.findProgramAddress(
+      [
+        anchor.utils.bytes.utf8.encode("coin-flip"),
+        playerOne.publicKey.toBuffer(),
+        playerTwo.publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+
+    await playerOneProgram.rpc.setup(playerTwo.publicKey, {
       accounts: {
-        coinFlip: coinFlipKeypair.publicKey,
+        coinFlip: coinFlipPDA,
         playerOne: playerOne.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
-      signers: [coinFlipKeypair],
     });
 
-    await play(program, coinFlipKeypair.publicKey, playerTwo);
+    await play(playerTwoProgram, coinFlipPDA, playerTwo);
   });
 });

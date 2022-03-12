@@ -33,7 +33,10 @@ export default async function handler(
   const vendor = anchor.web3.Keypair.fromSecretKey(secretKeyArray);
   const vendorWallet = new anchor.Wallet(vendor);
 
-  const connection = new Connection(clusterApiUrl("devnet"), commitment);
+  const connection = new Connection(
+    "https://explorer-api.devnet.solana.com/",
+    commitment
+  );
   const provider = new anchor.Provider(connection, vendorWallet, {
     preflightCommitment,
     commitment,

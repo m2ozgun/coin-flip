@@ -10,19 +10,23 @@ function programForUser(user) {
   return new anchor.Program(program.idl, program.programId, user.provider);
 }
 
-async function play(program, coinFlip, player) {
+async function play(provider, program, coinFlip, playerOne, playerTwo) {
   const playerChoice = 1;
-  await program.rpc.play(playerChoice, {
+  const tx = await program.rpc.play(playerChoice, {
     accounts: {
-      player: player.publicKey,
+      vendor: playerOne.publicKey,
+      player: playerTwo.publicKey,
       coinFlip,
+      systemProgram: anchor.web3.SystemProgram.programId,
     },
-    signers: player instanceof (anchor.Wallet as any) ? [] : [player],
+    signers: playerTwo instanceof (anchor.Wallet as any) ? [] : [playerTwo],
   });
 
-  const gameState = await program.account.coinFlip.fetch(coinFlip);
-  console.log("playerTwo: ", player.publicKey.toString());
-  console.log("Winner:", gameState.state.finished.winner.toString());
+  // const gameState = await program.account.coinFlip.fetch(coinFlip);
+  // console.log("playerTwo: ", playerTwo.publicKey.toString());
+  // console.log("Winner:", gameState.state.finished.winner.toString());
+  // console.log({ gameState: gameState.players });
+  await provider.connection.confirmTransaction(tx);
 }
 
 describe("coin-flip", () => {
@@ -30,51 +34,95 @@ describe("coin-flip", () => {
   anchor.setProvider(provider);
 
   it("setups the game", async () => {
-    const playerOne = program.provider.wallet;
-    const playerTwo = anchor.web3.Keypair.generate();
-    const playerOneProgram = programForUser(playerOne);
+    const vendor = anchor.web3.Keypair.generate();
+    const player = anchor.web3.Keypair.generate();
+
+    let sig = await provider.connection.requestAirdrop(
+      player.publicKey,
+      1000000000000
+    );
+    await provider.connection.confirmTransaction(sig);
+
+    let sig2 = await provider.connection.requestAirdrop(
+      vendor.publicKey,
+      1000000000000
+    );
+    await provider.connection.confirmTransaction(sig2);
+
+    const vendorProgram = programForUser(vendor);
 
     const [coinFlipPDA, _] = await anchor.web3.PublicKey.findProgramAddress(
       [
         anchor.utils.bytes.utf8.encode("coin-flip"),
-        playerOne.publicKey.toBuffer(),
-        playerTwo.publicKey.toBuffer(),
+        vendor.publicKey.toBuffer(),
+        player.publicKey.toBuffer(),
       ],
       program.programId
     );
 
-    await playerOneProgram.rpc.setup(playerTwo.publicKey, {
+    const betAmount = new anchor.BN(100000000000);
+    await vendorProgram.rpc.setup(player.publicKey, betAmount, {
       accounts: {
         coinFlip: coinFlipPDA,
-        playerOne: playerOne.publicKey,
+        vendor: vendor.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
+      signers: [vendor],
     });
   });
 
   it("plays the game", async () => {
-    const playerOne = program.provider.wallet;
-    const playerTwo = anchor.web3.Keypair.generate();
-    const playerOneProgram = programForUser(playerOne);
-    const playerTwoProgram = programForUser(playerTwo);
+    const vendor = anchor.web3.Keypair.generate();
+    const player = anchor.web3.Keypair.generate();
+
+    let sig = await provider.connection.requestAirdrop(
+      player.publicKey,
+      1000000000000
+    );
+    await provider.connection.confirmTransaction(sig);
+    let sig2 = await provider.connection.requestAirdrop(
+      vendor.publicKey,
+      1000000000000
+    );
+    await provider.connection.confirmTransaction(sig2);
+
+    const vendorProgram = programForUser(vendor);
+    const playerProgram = programForUser(player);
 
     const [coinFlipPDA, _] = await anchor.web3.PublicKey.findProgramAddress(
       [
         anchor.utils.bytes.utf8.encode("coin-flip"),
-        playerOne.publicKey.toBuffer(),
-        playerTwo.publicKey.toBuffer(),
+        vendor.publicKey.toBuffer(),
+        player.publicKey.toBuffer(),
       ],
       program.programId
     );
 
-    await playerOneProgram.rpc.setup(playerTwo.publicKey, {
+    const betAmount = new anchor.BN(50000000000);
+    await vendorProgram.rpc.setup(player.publicKey, betAmount, {
       accounts: {
         coinFlip: coinFlipPDA,
-        playerOne: playerOne.publicKey,
+        vendor: vendor.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       },
+      signers: [vendor],
     });
 
-    await play(playerTwoProgram, coinFlipPDA, playerTwo);
+    await play(provider, playerProgram, coinFlipPDA, vendor, player);
+
+    // const coinFlipBalanceAfterFlip = await provider.connection.getAccountInfo(
+    //   coinFlipPDA
+    // );
+    // console.log({ coinFlipBalanceAfterFlip });
+
+    const vendorBalanceAfterFlip = await provider.connection.getAccountInfo(
+      vendor.publicKey
+    );
+    console.log({ vendorBalanceAfterFlip });
+
+    const playerBalanceAfterFlip = await provider.connection.getAccountInfo(
+      player.publicKey
+    );
+    console.log({ playerBalanceAfterFlip });
   });
 });

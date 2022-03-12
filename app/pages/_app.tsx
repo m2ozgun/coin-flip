@@ -7,6 +7,9 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import {
   PhantomWalletAdapter,
   SlopeWalletAdapter,
+  SolflareWalletAdapter,
+  SolletExtensionWalletAdapter,
+  SolletWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import { AppProps } from "next/app";
@@ -18,11 +21,11 @@ require("../styles/globals.css");
 
 const App: FC<AppProps> = ({ Component, pageProps }) => {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-  // const network = WalletAdapterNetwork.Devnet;
+  const network = WalletAdapterNetwork.Devnet;
 
   // You can also provide a custom RPC endpoint
-  // const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-  const endpoint = "http://localhost:8899";
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+  // const endpoint = "http://localhost:8899";
 
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking and lazy loading --
   // Only the wallets you configure here will be compiled into your application, and only the dependencies
@@ -31,11 +34,11 @@ const App: FC<AppProps> = ({ Component, pageProps }) => {
     () => [
       new PhantomWalletAdapter(),
       new SlopeWalletAdapter(),
-      // new SolflareWalletAdapter({ network }),
-      // new SolletWalletAdapter({ network }),
-      // new SolletExtensionWalletAdapter({ network }),
+      new SolflareWalletAdapter({ network }),
+      new SolletWalletAdapter({ network }),
+      new SolletExtensionWalletAdapter({ network }),
     ],
-    []
+    [network]
   );
 
   return (

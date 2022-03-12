@@ -110,11 +110,6 @@ describe("coin-flip", () => {
 
     await play(provider, playerProgram, coinFlipPDA, vendor, player);
 
-    // const coinFlipBalanceAfterFlip = await provider.connection.getAccountInfo(
-    //   coinFlipPDA
-    // );
-    // console.log({ coinFlipBalanceAfterFlip });
-
     const vendorBalanceAfterFlip = await provider.connection.getAccountInfo(
       vendor.publicKey
     );

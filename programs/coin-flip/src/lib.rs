@@ -77,7 +77,7 @@ pub mod coin_flip {
             **ctx.accounts.player.to_account_info().try_borrow_mut_lamports()? += total_bet;
         }
 
-        coin_flip.close(ctx.accounts.vendor.clone())?;
+        // coin_flip.close(ctx.accounts.vendor.clone())?;
         Ok(())
     }
 

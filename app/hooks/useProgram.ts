@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Connection, PublicKey } from "@solana/web3.js";
 import * as anchor from "@project-serum/anchor";
 
-import idl from "../../target/idl/coin_flip.json";
+import idl from "../coin_flip.json";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 
 const programID = new PublicKey(idl.metadata.address);

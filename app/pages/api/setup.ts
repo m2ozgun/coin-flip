@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import * as anchor from "@project-serum/anchor";
 import * as idl from "../../coin_flip.json";
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 const programId = "2WWFGRA4f81ubcjtkh112obV8brzF6nkhBCDGh7Z8hqo";
 import { clusterApiUrl } from "@solana/web3.js";
@@ -11,6 +11,9 @@ type Data = {
   coinFlipPDA: string;
   vendor: string;
 };
+
+const preflightCommitment = "processed";
+const commitment = "processed";
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,12 +24,19 @@ export default async function handler(
   playerPublicKey = new PublicKey(playerPublicKey);
   amount = new anchor.BN(amount);
 
-  const provider = anchor.Provider.local(clusterApiUrl("devnet"));
-  anchor.setProvider(provider);
-
   const { VENDOR_SECRET_KEY } = process.env;
   const secretKeyArray = Buffer.from(VENDOR_SECRET_KEY as string);
   const vendor = anchor.web3.Keypair.fromSecretKey(secretKeyArray);
+  const vendorWallet = new anchor.Wallet(vendor);
+
+  const connection = new Connection(
+    "https://api.devnet.solana.com",
+    commitment
+  );
+  const provider = new anchor.Provider(connection, vendorWallet, {
+    preflightCommitment,
+    commitment,
+  });
 
   let sig = await provider.connection.requestAirdrop(
     playerPublicKey,

@@ -5,6 +5,7 @@ import * as idl from "../../coin_flip.json";
 import { PublicKey } from "@solana/web3.js";
 
 const programId = "2WWFGRA4f81ubcjtkh112obV8brzF6nkhBCDGh7Z8hqo";
+import { clusterApiUrl } from "@solana/web3.js";
 
 type Data = {
   coinFlipPDA: string;
@@ -20,10 +21,13 @@ export default async function handler(
   playerPublicKey = new PublicKey(playerPublicKey);
   amount = new anchor.BN(amount);
 
-  const provider = anchor.Provider.local("http://127.0.0.1:8899");
+  const provider = anchor.Provider.local(clusterApiUrl("devnet"));
   anchor.setProvider(provider);
 
-  const vendor = anchor.web3.Keypair.generate();
+  const { VENDOR_SECRET_KEY } = process.env;
+  const secretKeyArray = Buffer.from(VENDOR_SECRET_KEY as string);
+  const vendor = anchor.web3.Keypair.fromSecretKey(secretKeyArray);
+
   let sig = await provider.connection.requestAirdrop(
     playerPublicKey,
     1000000000000

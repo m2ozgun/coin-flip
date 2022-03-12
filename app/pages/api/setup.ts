@@ -25,14 +25,15 @@ export default async function handler(
   amount = new anchor.BN(amount);
 
   const { VENDOR_SECRET_KEY } = process.env;
-  const secretKeyArray = Buffer.from(VENDOR_SECRET_KEY as string);
+  if (!VENDOR_SECRET_KEY) return;
+
+  const secretKeyArray = Uint8Array.from(JSON.parse(VENDOR_SECRET_KEY));
+  console.log(secretKeyArray);
+
   const vendor = anchor.web3.Keypair.fromSecretKey(secretKeyArray);
   const vendorWallet = new anchor.Wallet(vendor);
 
-  const connection = new Connection(
-    "https://api.devnet.solana.com",
-    commitment
-  );
+  const connection = new Connection(clusterApiUrl("devnet"), commitment);
   const provider = new anchor.Provider(connection, vendorWallet, {
     preflightCommitment,
     commitment,

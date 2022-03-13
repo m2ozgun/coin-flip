@@ -29,6 +29,10 @@
         {
           "name": "betAmount",
           "type": "u64"
+        },
+        {
+          "name": "vendorSeed",
+          "type": "i64"
         }
       ]
     },
@@ -60,6 +64,36 @@
         {
           "name": "playerChoice",
           "type": "u8"
+        },
+        {
+          "name": "playerSeed",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "accounts": [
+        {
+          "name": "coinFlip",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vendor",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "player",
+          "type": "publicKey"
         }
       ]
     }

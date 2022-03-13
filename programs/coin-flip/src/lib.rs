@@ -8,19 +8,15 @@ declare_id!("2WWFGRA4f81ubcjtkh112obV8brzF6nkhBCDGh7Z8hqo");
 pub mod coin_flip {
     use super::*;
     use anchor_lang::solana_program::{program::invoke, system_instruction::transfer};
-    use anchor_lang::AccountsClose;
+    // use anchor_lang::AccountsClose;
 
-    pub fn setup(ctx: Context<Setup>, player: Pubkey, bet_amount: u64) -> Result<()> {
-        msg!("setup: {}", player);
-
+    pub fn setup(ctx: Context<Setup>, player: Pubkey, bet_amount: u64, vendor_seed: i64) -> Result<()> {
         let coin_flip = &mut ctx.accounts.coin_flip;
 
         coin_flip.players = [ctx.accounts.vendor.key(), player];
-        coin_flip.vendor_seed = 124;
+        coin_flip.vendor_seed = vendor_seed;
         coin_flip.bump = *ctx.bumps.get("coin_flip").unwrap();
         coin_flip.bet_amount = bet_amount;
-        
-
 
         invoke(
             &transfer(
@@ -39,9 +35,9 @@ pub mod coin_flip {
     }
 
     
-    pub fn play(ctx: Context<Play>, player_choice: u8) -> Result<()> {
+    pub fn play(ctx: Context<Play>, player_choice: u8, player_seed: i64) -> Result<()> {
         let coin_flip = &mut ctx.accounts.coin_flip;
-        let player_seed = 123;
+        let player_seed = player_seed;
 
         // 0: Tails, 1: Heads
         let player_side = if player_choice == 0 {
@@ -49,7 +45,6 @@ pub mod coin_flip {
         } else {
             Side::Heads
         };
-        
 
         invoke(
             &transfer(
@@ -81,10 +76,14 @@ pub mod coin_flip {
         Ok(())
     }
 
+
+    pub fn delete(_ctx: Context<Delete>, player: Pubkey) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
-#[instruction(player: Pubkey)]
+#[instruction(player: Pubkey, bet_amount: u64, vendor_seed: i64)]
 pub struct Setup<'info> {
     #[account(
         init, 
@@ -110,6 +109,20 @@ pub struct Play<'info> {
     #[account(mut)]
     /// CHECK
     pub vendor : AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(player: Pubkey)]
+pub struct Delete<'info> {
+    #[account(
+        mut, 
+        close = vendor,
+        seeds = [b"coin-flip", vendor.key().as_ref(), player.as_ref()], bump
+    )]
+    pub coin_flip: Account<'info, CoinFlip>,
+    #[account(mut)]
+    pub vendor: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 

@@ -14,6 +14,10 @@ const Play: NextPage = () => {
   const [statusInfo, setStatusInfo] = useState("Idle");
 
   const playFlip = async () => {
+    if (parseFloat(betAmount) < 0.1 || parseFloat(betAmount) > 5) {
+      setStatusInfo("Please enter a bet between 0.1 and 5 SOL.");
+      return;
+    }
     if (wallet && program && connection) {
       const amount = parseFloat(betAmount) * anchor.web3.LAMPORTS_PER_SOL;
 
@@ -32,9 +36,10 @@ const Play: NextPage = () => {
 
         const responseJson = await response.json();
         console.log(responseJson);
+        const randomSeed = new anchor.BN(Math.floor(Math.random() * 100000));
 
         setStatusInfo("Waiting for user confirmation");
-        const tx = await program.rpc.play(betSide, {
+        const tx = await program.rpc.play(betSide, randomSeed, {
           accounts: {
             vendor: responseJson.vendor,
             player: wallet.publicKey,
@@ -56,6 +61,8 @@ const Play: NextPage = () => {
           setStatusInfo(`You won! Amount: ${betAmount} SOL`);
         else setStatusInfo(`You lost :(`);
       } catch (error) {
+        console.log(error);
+
         setStatusInfo("Something went wrong, please try again.");
       }
     }

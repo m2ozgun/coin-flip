@@ -34,7 +34,7 @@ export default async function handler(
   const vendorWallet = new anchor.Wallet(vendor);
 
   const connection = new Connection(
-    "http://127.0.0.1:8899 ", // https://explorer-api.devnet.solana.com/
+    "https://explorer-api.devnet.solana.com/",
     commitment
   );
   const provider = new anchor.Provider(connection, vendorWallet, {

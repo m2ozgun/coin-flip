@@ -9,7 +9,7 @@ coin_flip = "2WWFGRA4f81ubcjtkh112obV8brzF6nkhBCDGh7Z8hqo"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/Users/mertozgun/.config/solana/id.json"
 
 [scripts]

@@ -63,7 +63,6 @@ pub mod coin_flip {
 
         let winner = coin_flip.play(player_seed, player_side);
 
-
         **coin_flip.to_account_info().try_borrow_mut_lamports()? -= total_bet;
 
         if winner == *ctx.accounts.vendor.key {
@@ -72,7 +71,6 @@ pub mod coin_flip {
             **ctx.accounts.player.to_account_info().try_borrow_mut_lamports()? += total_bet;
         }
 
-        // coin_flip.close(ctx.accounts.vendor.clone())?;
         Ok(())
     }
 
@@ -175,7 +173,6 @@ impl CoinFlip {
     }
 
     pub fn play(&mut self, player_seed: i64, player_side: Side) -> Pubkey {
-
         let flip_result = self.flip(player_seed);
 
         if flip_result == player_side {
@@ -190,7 +187,6 @@ impl CoinFlip {
             self.players[0]
         }
     }
-    
 }
 
 #[error_code]
